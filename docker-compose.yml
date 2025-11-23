@@ -1,0 +1,57 @@
+version: "3.9"
+
+services:
+  # -----------------------------------------------------------------
+  # Redis – stores static knowledge and every lookup performed by the agent
+  # -----------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: ["redis-server", "--appendonly", "yes"]
+    restart: unless-stopped
+
+  # -----------------------------------------------------------------
+  # Agent API – FastAPI wrapper that forces a tool call, logs lookups,
+  #             then forwards the request to LM Studio (running on host)
+  # -----------------------------------------------------------------
+  agent-api:
+    build:
+      context: ./agent-api
+      dockerfile: Dockerfile
+    image: local/agent-api:latest
+    container_name: agent-api
+    environment:
+      - AGENT_MODEL=${AGENT_MODEL}
+      - AGENT_OPENAI_API_KEY=${AGENT_OPENAI_API_KEY}
+      - LMSTUDIO_HOST=${LMSTUDIO_HOST}
+      - LMSTUDIO_PORT=${LMSTUDIO_PORT}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - AGENT_MAX_LOOKUP_HISTORY=${AGENT_MAX_LOOKUP_HISTORY}
+    depends_on:
+      - redis
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+  # -----------------------------------------------------------------
+  # Chat UI – tiny React app served by nginx
+  # -----------------------------------------------------------------
+  chat-ui:
+    build:
+      context: ./chat-ui
+      dockerfile: Dockerfile
+    image: local/chat-ui:latest
+    container_name: chat-ui
+    ports:
+      - "${UI_PORT}:80"
+    depends_on:
+      - agent-api
+    restart: unless-stopped
+
+volumes:
+  redis-data:
