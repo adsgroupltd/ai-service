@@ -1,0 +1,6 @@
+fastapi==0.111.*
+uvicorn[standard]==0.30.*
+openai==1.35.*
+redis[hiredis]==5.0.*
+python-dotenv==1.0.*
+pydantic==2.8.*
