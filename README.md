@@ -1,6 +1,6 @@
 1️⃣ Simple code‑block (works everywhere)
 
-Copy
+`
 my-agent/
 ├── .env
 ├── docker-compose.yml
@@ -16,4 +16,4 @@ my-agent/
     ├── index.html
     └── src/
         └── App.jsx
-Why it works:
+`
